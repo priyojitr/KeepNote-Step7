@@ -1,27 +1,114 @@
-## Seed code - Boilerplate for step 6 - Keep Note Assignment
+## Seed code - Boilerplate for step 7 - Keep Note Assignment
 
 ### Assignment Step Description
 
-In this case study Keep Note Step 6, we will implement JWT (JSON Web Token) on top of Keep Note Step 5 Assignment. JSON Web Token (JWT) is an open standard (RFC 7519) that 
-defines a compact and self-contained way for securely transmitting information between parties as a JSON object. This information can be verified and trusted because it is
-digitally signed.
+In this case study Keep Note Step 7, we will implement and deploy the application  developed in step 6 as set of  microservices  communicating with each other.  
+The microservices should communicate with each other using Netflix-Zuul-API-Gateway and should be registered on nexflix-Eureka-naming-Server.
+You should also use Netflix-Feign for microsesrvice communication and Netflix-Ribbon for client side load blancing .
 
-In this step, we will create this application in five parts 
+
+
+In this step, we will create this application in five independently deployed  Micro Services. 
     
         1. AuthenticationService
         2. UserService
         3. NoteService
         4. CategoryService
         5. ReminderService
+        
+        
+        
+        
+ ######### Steps to be followed for implementing  and deplying application as Micro Services 
+ 
+ 
+ Select following port to run different MicroServices
+ 
+ Ports
+ =========	
+Application						Port
+	
+ AuthenticationService			9100, 9101, 9102
+User Service					9200 , 9201
+Note Service					9300
+Category Service				9400
+ReminderRervice					9500
+Spring Cloud Config Server		8888
+Netflix Eureka Naming Server	8761
+Netflix Zuul API Gateway Server	8765
+ 
+     
+=======================================
+
+
+You should set following propertes for Microservices
+
+
+application.propertes for all Services except Eureka server 
+========================
+  spring.application.name= {{name of the application }} 
+  server.port=  {{port number suggested above}}
+  
+  eureka.client.service-url.default-zone=http://localhost:8761/eureka
+  
+  
+  
+  #################################
+  
+  To run application on multiple port 
+  
+  In Eclipse IDE ->  Right Click application  -> RunAs => Run Configuration 
+  
+  VM arguments 
+  
+   -DServer.port={{portnumber}}
+         
+         
+         
+         
+        --------------------------------------
+        
+        
+  Project Dependencies
+  ============================
+  
+  Project should be created with Spring Initializer (start.spring.io) with follwing dependency
+  
+  Web, DevTools, Feign, Ribbon, EurekaDiscovery , Zuul
+  
+  JPA can be taken where persistance is required. 
+  
+ 
+ 
+  Note that  For project EurekaNaming server 
+  
+  Port:8761
+  
+  Spring Initializer dependency is Eureka Server and not Discovery 
+  
+        
+        
 
 ### Steps to be followed:
 
-    Step 1: Clone the boilerplate in a specific folder on your local machine and import the same in your eclipse STS.
+    Step 1: Clone the boilerplate in a specific folder on your local machine and import the same in your eclipse STS
     Step 2: Go thru the readme.md file and implement the code for AuthenticationService and run the test cases.
     Step 3: Go thru the readme.md file and implement the code for UserService and run the test cases.
     Step 4: Go thru the readme.md file and implement the code for NoteService  and run the test cases.
     Step 5: Go thru the readme.md file and implement the code for CategoryService and run the test cases.
     Step 6: Go thru the readme.md file and implement the code for ReminderService and run the test cases.
+    
+
+Import point to be taken care in implementaion of MS
+
+Step 7: All communication between different services should be done through Netflix-Feign and client side load balancing should be done using nexflix-Ribbon 
+
+
+
+
+
+
+
 
 ### Project structure
 
@@ -44,29 +131,29 @@ The folders and files you see in this repositories, is how it is expected to be 
 
 #### To use this as a boilerplate for your new project, you can follow these steps
 
-1. Clone the base boilerplate in the folder **assignment-solution-step6** of your local machine
+1. Clone the base boilerplate in the folder **assignment-solution-step7** of your local machine
      
-    `git clone https://gitlab-cts.stackroute.in/stack_java_keep/KeepNote-Step6-Boilerplate.git assignment-solution-step6`
+    `git clone https://gitlab-cts.stackroute.in/stack_java_keep/KeepNote-Step7-Boilerplate.git assignment-solution-step6`
 
-2. Navigate to assignment-solution-step6 folder
+2. Navigate to assignment-solution-step7 folder
 
-    `cd assignment-solution-step6`
+    `cd assignment-solution-step7`
 
 3. Remove its remote or original reference
 
      `git remote rm origin`
 
-4. Create a new repo in gitlab named `assignment-solution-step6` as private repo
+4. Create a new repo in gitlab named `assignment-solution-step7` as private repo
 
 5. Add your new repository reference as remote
 
-     `git remote add origin https://gitlab-dev.stackroute.in/{{yourusername}}/assignment-solution-step6`
+     `git remote add origin https://gitlab-dev.stackroute.in/{{yourusername}}/assignment-solution-step7`
 
      **Note: {{yourusername}} should be replaced by your username from gitlab**
 
 5. Check the status of your repo 
      
-     `git status`
+     `git status`            
 
 6. Use the following command to update the index using the current content found in the working tree, to prepare the content staged for the next commit.
 
