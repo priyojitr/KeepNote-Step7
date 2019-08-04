@@ -1,10 +1,5 @@
 package com.stackroute.keepnote.model;
 
-import java.util.List;
-
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,11 +11,8 @@ import lombok.ToString;
 @Data
 @Builder
 @ToString
-@Document
-public class NoteUser {
+public class LoginModel {
 
-    @Id
 	private String userId;
-    private List<Note> notes;
-
+	private String userPassword;
 }

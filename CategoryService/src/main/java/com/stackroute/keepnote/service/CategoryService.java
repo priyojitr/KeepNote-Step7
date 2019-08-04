@@ -17,7 +17,7 @@ public interface CategoryService {
 
     boolean deleteCategory(String categoryId) throws CategoryDoesNoteExistsException;
 
-    Category updateCategory(Category category, String categoryId);
+    Category updateCategory(Category category, String categoryId) throws CategoryNotFoundException;
 
     Category getCategoryById(String categoryId) throws CategoryNotFoundException;
 

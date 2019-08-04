@@ -1,39 +1,31 @@
 package com.stackroute.keepnote;
 
+import javax.servlet.Filter;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.env.Environment;
 
-/*
- * The @SpringBootApplication annotation is equivalent to using @Configuration, @EnableAutoConfiguration 
- * and @ComponentScan with their default attributes
- */
+import com.stackroute.keepnote.jwtfilter.JwtFilter;
 
 @SpringBootApplication
 public class ReminderServiceApplication {
 
-	
-	
-	
-	/*
-	 * Define the bean for Filter registration. Create a new FilterRegistrationBean
-	 * object and use setFilter() method to set new instance of JwtFilter object.
-	 * Also specifies the Url patterns for registration bean.
-	 */
-	  @Bean
-	    public FilterRegistrationBean jwtFilter() {
-	       
-	        return null;
-	    }
+	private static final String JWT_KEY = "jwt.key";
 
-	
-	
-	/*
-	 * 
-	 * You need to run SpringApplication.run, because this method start whole spring
-	 * framework. Code below integrates your main() with SpringBoot
-	 */
+	@Autowired
+	private Environment env;
+
+	@Bean
+	public FilterRegistrationBean<Filter> jwtFilter() {
+		FilterRegistrationBean<Filter> filterBean = new FilterRegistrationBean<>();
+		filterBean.setFilter(new JwtFilter(env.getProperty(JWT_KEY)));
+		filterBean.addUrlPatterns("/*");
+		return filterBean;
+	}
 
 	public static void main(String[] args) {
 		SpringApplication.run(ReminderServiceApplication.class, args);

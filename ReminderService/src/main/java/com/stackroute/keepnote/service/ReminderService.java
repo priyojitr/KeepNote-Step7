@@ -8,11 +8,6 @@ import java.util.List;
 
 public interface ReminderService {
 	
-	/*
-	 * Should not modify this interface. You have to implement these methods in
-	 * corresponding Impl classes
-	 */
-
     Reminder createReminder(Reminder reminder) throws ReminderNotCreatedException;
 
     boolean deleteReminder(String reminderId) throws ReminderNotFoundException;
@@ -21,5 +16,5 @@ public interface ReminderService {
 
     Reminder getReminderById(String reminderId) throws ReminderNotFoundException;
 
-    List<Reminder> getAllReminders();
+    List<Reminder> getAllReminders(String userId);
 }

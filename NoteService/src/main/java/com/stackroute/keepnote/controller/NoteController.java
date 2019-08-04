@@ -1,79 +1,119 @@
 package com.stackroute.keepnote.controller;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.stackroute.keepnote.exception.NoteAlreadyExistsException;
+import com.stackroute.keepnote.exception.NoteNotFoundExeption;
+import com.stackroute.keepnote.model.Note;
 import com.stackroute.keepnote.service.NoteService;
 
-/*
- * As in this assignment, we are working with creating RESTful web service, hence annotate
- * the class with @RestController annotation.A class annotated with @Controller annotation
- * has handler methods which returns a view. However, if we use @ResponseBody annotation along
- * with @Controller annotation, it will return the data directly in a serialized 
- * format. Starting from Spring 4 and above, we can use @RestController annotation which 
- * is equivalent to using @Controller and @ResposeBody annotation
- */
+import lombok.extern.apachecommons.CommonsLog;
+
+@RestController
+@RequestMapping(value = "/api/v1", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+@CommonsLog
 public class NoteController {
 
-	/*
-	 * Autowiring should be implemented for the NoteService. (Use Constructor-based
-	 * autowiring) Please note that we should not create any object using the new
-	 * keyword
-	 */
+	private NoteService noteService;
 
+	@Autowired
 	public NoteController(NoteService noteService) {
+		this.noteService = noteService;
 	}
 
-	/*
-	 * Define a handler method which will create a specific note by reading the
-	 * Serialized object from request body and save the note details in the
-	 * database.This handler method should return any one of the status messages
-	 * basis on different situations: 
-	 * 1. 201(CREATED) - If the note created successfully. 
-	 * 2. 409(CONFLICT) - If the noteId conflicts with any existing user.
+	/**
+	 * This api should be able to create a new based on info received.
 	 * 
-	 * This handler method should map to the URL "/api/v1/note" using HTTP POST method
+	 * @throws NoteAlreadyExistsException
 	 */
+	@PostMapping("/note")
+	public Note createNote(@RequestBody Note note) throws NoteAlreadyExistsException {
+		log.info("calling service layer to store");
+		try {
+			this.noteService.createNote(note);
+			return note;
+		} catch (NoteAlreadyExistsException e) {
+			log.info(e.getClass().getName() + " -- " + e.getMessage());
+			throw new NoteAlreadyExistsException(e.getMessage());
+		}
+	}
 
-	/*
-	 * Define a handler method which will delete a note from a database.
-	 * This handler method should return any one of the status messages basis 
-	 * on different situations: 
-	 * 1. 200(OK) - If the note deleted successfully from database. 
-	 * 2. 404(NOT FOUND) - If the note with specified noteId is not found.
-	 *
-	 * This handler method should map to the URL "/api/v1/note/{id}" using HTTP Delete
-	 * method" where "id" should be replaced by a valid noteId without {}
+	/**
+	 * This api should be able to delete a note based on user id & note id.
+	 * 
+	 * @param userId
+	 * @return
+	 * @throws UserNotFoundException
 	 */
+	@GetMapping(value = "/note/delete/{userId}/{noteId}")
+	public String deleteNote(@PathVariable String userId, @PathVariable int noteId) throws NoteNotFoundExeption {
+		try {
+			this.noteService.deleteNote(userId, noteId);
+			return "{\"isDeleted\":\"true\"}";
+		} catch (NoteNotFoundExeption e) {
+			log.info(e.getClass().getName() + " -- " + e.getMessage());
+			throw new NoteNotFoundExeption(e.getMessage());
+		}
 
-	/*
-	 * Define a handler method which will update a specific note by reading the
-	 * Serialized object from request body and save the updated note details in a
-	 * database. 
-	 * This handler method should return any one of the status messages
-	 * basis on different situations: 
-	 * 1. 200(OK) - If the note updated successfully.
-	 * 2. 404(NOT FOUND) - If the note with specified noteId is not found.
-	 * 
-	 * This handler method should map to the URL "/api/v1/note/{id}" using HTTP PUT method.
-	 */
-	
-	/*
-	 * Define a handler method which will get us the all notes by a userId.
-	 * This handler method should return any one of the status messages basis on
-	 * different situations: 
-	 * 1. 200(OK) - If the note found successfully. 
-	 * 
-	 * This handler method should map to the URL "/api/v1/note" using HTTP GET method
-	 */
-	
-	/*
-	 * Define a handler method which will show details of a specific note created by specific 
-	 * user. This handler method should return any one of the status messages basis on
-	 * different situations: 
-	 * 1. 200(OK) - If the note found successfully. 
-	 * 2. 404(NOT FOUND) - If the note with specified noteId is not found.
-	 * This handler method should map to the URL "/api/v1/note/{userId}/{noteId}" using HTTP GET method
-	 * where "id" should be replaced by a valid reminderId without {}
-	 * 
-	 */
+	}
 
+	/**
+	 * This api should be able to update a note info based on user id & note id.
+	 * 
+	 * @param userId
+	 * @param noteId
+	 * @return
+	 * @throws NoteNotFoundExeption
+	 */
+	@PostMapping(value = "/note/update/{userId}/{noteId}")
+	public Note updateNote(@RequestBody Note note, @PathVariable String userId, @PathVariable int noteId)
+			throws NoteNotFoundExeption {
+		log.info("calling service layer to update");
+		try {
+			return this.noteService.updateNote(note, noteId, userId);
+		} catch (NoteNotFoundExeption e) {
+			log.info(e.getClass().getName() + " -- " + e.getMessage());
+			throw new NoteNotFoundExeption(e.getMessage());
+		}
+	}
+
+	/**
+	 * This api should return list all notes based on user id
+	 * 
+	 * @throws NoteNotFoundExeption
+	 */
+	@GetMapping("/note/{userId}")
+	public List<Note> getAllNotesByUserId(@PathVariable String userId) throws NoteNotFoundExeption {
+			return this.noteService.getAllNoteByUserId(userId);
+	}
+
+	/**
+	 * This api should return a specific note based on note id & user id
+	 * 
+	 * @throws NoteNotFoundExeption
+	 */
+	@GetMapping("/note/{userId}/{noteId}")
+	public Note getNote(@PathVariable String userId, @PathVariable int noteId) throws NoteNotFoundExeption {
+		try {
+			Note note = this.noteService.getNoteByNoteId(userId, noteId);
+			if (null != note) {
+				return note;
+			} else {
+				throw new NoteNotFoundExeption("note not found exception");
+			}
+		} catch (Exception e) {
+			log.info(e.getClass().getName() + " -- " + e.getMessage());
+			throw new NoteNotFoundExeption(e.getMessage());
+		}
+	}
 
 }

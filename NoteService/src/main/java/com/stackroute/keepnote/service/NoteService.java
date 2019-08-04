@@ -1,5 +1,6 @@
 package com.stackroute.keepnote.service;
 
+import com.stackroute.keepnote.exception.NoteAlreadyExistsException;
 import com.stackroute.keepnote.exception.NoteNotFoundExeption;
 import com.stackroute.keepnote.model.Note;
 
@@ -14,9 +15,9 @@ public interface NoteService {
 	 */
 
 
-    boolean createNote(Note note);
+    boolean createNote(Note note) throws NoteAlreadyExistsException;
 
-    boolean deleteNote(String userId, int noteId);
+    boolean deleteNote(String userId, int noteId) throws NoteNotFoundExeption;
 
     boolean deleteAllNotes(String userId) throws NoteNotFoundExeption;
 
@@ -24,7 +25,7 @@ public interface NoteService {
 
     Note getNoteByNoteId(String userId,int noteId) throws NoteNotFoundExeption;
 
-    List<Note> getAllNoteByUserId(String userId);
+    List<Note> getAllNoteByUserId(String userId) throws NoteNotFoundExeption;
 
 
 }

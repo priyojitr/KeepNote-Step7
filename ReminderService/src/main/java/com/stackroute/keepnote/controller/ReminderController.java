@@ -1,95 +1,118 @@
 package com.stackroute.keepnote.controller;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.stackroute.keepnote.exception.ReminderNotCreatedException;
+import com.stackroute.keepnote.exception.ReminderNotFoundException;
+import com.stackroute.keepnote.model.Reminder;
 import com.stackroute.keepnote.service.ReminderService;
 
-/*
- * As in this assignment, we are working with creating RESTful web service, hence annotate
- * the class with @RestController annotation.A class annotated with @Controller annotation
- * has handler methods which returns a view. However, if we use @ResponseBody annotation along
- * with @Controller annotation, it will return the data directly in a serialized 
- * format. Starting from Spring 4 and above, we can use @RestController annotation which 
- * is equivalent to using @Controller and @ResposeBody annotation
- */
+import lombok.extern.apachecommons.CommonsLog;
 
+@RestController
+@RequestMapping(value = "/api/v1", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+@CommonsLog
 public class ReminderController {
 
-	/*
-	 * From the problem statement, we can understand that the application requires
-	 * us to implement five functionalities regarding reminder. They are as
-	 * following:
-	 * 
-	 * 1. Create a reminder 
-	 * 2. Delete a reminder 
-	 * 3. Update a reminder 
-	 * 4. Get all reminders by userId 
-	 * 5. Get a specific reminder by id.
-	 * 
-	 */
+	private ReminderService reminderService;
 
-	/*
-	 * Autowiring should be implemented for the ReminderService. (Use
-	 * Constructor-based autowiring) Please note that we should not create any
-	 * object using the new keyword
-	 */
-
+	@Autowired
 	public ReminderController(ReminderService reminderService) {
+		this.reminderService = reminderService;
 	}
 
-	/*
-	 * Define a handler method which will create a reminder by reading the
-	 * Serialized reminder object from request body and save the reminder in
-	 * database. Please note that the reminderId has to be unique. This handler
-	 * method should return any one of the status messages basis on different
-	 * situations: 
-	 * 1. 201(CREATED - In case of successful creation of the reminder
-	 * 2. 409(CONFLICT) - In case of duplicate reminder ID
-	 *
-	 * This handler method should map to the URL "/api/v1/reminder" using HTTP POST
-	 * method".
+	/**
+	 * This api should be able to create a new reminder based on info received.
+	 * 
+	 * @throws ReminderNotCreatedException
 	 */
+	@PostMapping("/reminder")
+	public Reminder createReminder(@RequestBody Reminder reminder) throws ReminderNotCreatedException {
+		log.info("calling service layer to store");
+		try {
+			this.reminderService.createReminder(reminder);
+			return reminder;
+		} catch (ReminderNotCreatedException e) {
+			log.info(e.getClass().getName() + " -- " + e.getMessage());
+			throw new ReminderNotCreatedException(e.getMessage());
+		}
+	}
 
-	/*
-	 * Define a handler method which will delete a reminder from a database.
+	/**
+	 * This api should be able to delete a reminder based on reminder id.
 	 * 
-	 * This handler method should return any one of the status messages basis on
-	 * different situations: 
-	 * 1. 200(OK) - If the reminder deleted successfully from database. 
-	 * 2. 404(NOT FOUND) - If the reminder with specified reminderId is not found.
-	 * 
-	 * This handler method should map to the URL "/api/v1/reminder/{id}" using HTTP Delete
-	 * method" where "id" should be replaced by a valid reminderId without {}
+	 * @param userId
+	 * @return
+	 * @throws ReminderNotFoundException
 	 */
+	@GetMapping(value = "/reminder/delete/{reminderId}")
+	public String deleteReminder(@PathVariable String reminderId) throws ReminderNotFoundException {
+		try {
+			this.reminderService.deleteReminder(reminderId);
+			return "{\"isDeleted\":\"true\"}";
+		} catch (ReminderNotFoundException e) {
+			log.info(e.getClass().getName() + " -- " + e.getMessage());
+			throw new ReminderNotFoundException(e.getMessage());
+		}
 
-	/*
-	 * Define a handler method which will update a specific reminder by reading the
-	 * Serialized object from request body and save the updated reminder details in
-	 * a database. This handler method should return any one of the status messages
-	 * basis on different situations: 
-	 * 1. 200(OK) - If the reminder updated successfully. 
-	 * 2. 404(NOT FOUND) - If the reminder with specified reminderId is not found. 
-	 * 
-	 * This handler method should map to the URL "/api/v1/reminder/{id}" using HTTP PUT
-	 * method.
-	 */
+	}
 
-	/*
-	 * Define a handler method which will show details of a specific reminder. This
-	 * handler method should return any one of the status messages basis on
-	 * different situations: 
-	 * 1. 200(OK) - If the reminder found successfully. 
-	 * 2. 404(NOT FOUND) - If the reminder with specified reminderId is not found. 
+	/**
+	 * This api should be able to update a reminder info based on reminder id.
 	 * 
-	 * This handler method should map to the URL "/api/v1/reminder/{id}" using HTTP GET method
-	 * where "id" should be replaced by a valid reminderId without {}
+	 * @param reminder
+	 * @return
+	 * @throws ReminderNotFoundException
 	 */
+	@PostMapping(value = "/reminder/update/{reminderId}")
+	public Reminder updateReminder(@RequestBody Reminder reminder, @PathVariable String reminderId)
+			throws ReminderNotFoundException {
+		log.info("calling service layer to update");
+		try {
+			return this.reminderService.updateReminder(reminder, reminderId);
+		} catch (ReminderNotFoundException e) {
+			log.info(e.getClass().getName() + " -- " + e.getMessage());
+			throw new ReminderNotFoundException(e.getMessage());
+		}
+	}
 
-	/*
-	 * Define a handler method which will get us the all reminders.
-	 * This handler method should return any one of the status messages basis on
-	 * different situations: 
-	 * 1. 200(OK) - If the reminder found successfully. 
-	 * 2. 404(NOT FOUND) - If the reminder with specified reminderId is not found.
+	/**
+	 * This api should return a specific reminder based on reminder id
 	 * 
-	 * This handler method should map to the URL "/api/v1/reminder" using HTTP GET method
+	 * @throws ReminderNotFoundException
 	 */
+	@GetMapping("/reminder/{userId}/{reminderId}")
+	public Reminder getReminderById(@PathVariable String userId, @PathVariable String reminderId)
+			throws ReminderNotFoundException {
+		try {
+			Reminder reminder = this.reminderService.getReminderById(reminderId);
+			if (null != reminder) {
+				return reminder;
+			} else {
+				throw new ReminderNotFoundException("reminder not found exception");
+			}
+		} catch (ReminderNotFoundException e) {
+			log.info(e.getClass().getName() + " -- " + e.getMessage());
+			throw new ReminderNotFoundException(e.getMessage());
+		}
+	}
+
+	/**
+	 * This api should return list all reminders based on user id
+	 * 
+	 * @throws ReminderNotFoundException
+	 */
+	@GetMapping("/reminder/{userId}")
+	public List<Reminder> getAllRemindersByUserId(@PathVariable String userId) throws ReminderNotFoundException {
+		return this.reminderService.getAllReminders(userId);
+	}
 }

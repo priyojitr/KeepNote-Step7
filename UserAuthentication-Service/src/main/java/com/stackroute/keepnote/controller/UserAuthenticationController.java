@@ -1,66 +1,115 @@
 package com.stackroute.keepnote.controller;
 
+import java.util.Date;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.stackroute.keepnote.authtoken.BearerToken;
+import com.stackroute.keepnote.exception.UserAlreadyExistsException;
+import com.stackroute.keepnote.exception.UserNotFoundException;
+import com.stackroute.keepnote.model.LoginModel;
+import com.stackroute.keepnote.model.User;
 import com.stackroute.keepnote.service.UserAuthenticationService;
 
-/*
- * As in this assignment, we are working on creating RESTful web service, hence annotate
- * the class with @RestController annotation. A class annotated with the @Controller annotation
- * has handler methods which return a view. However, if we use @ResponseBody annotation along
- * with @Controller annotation, it will return the data directly in a serialized 
- * format. Starting from Spring 4 and above, we can use @RestController annotation which 
- * is equivalent to using @Controller and @ResposeBody annotation
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.extern.apachecommons.CommonsLog;
+
+/**
+ * This service api is responsible for user registration, login & authentication
+ * check. The authenticated user will be provided with authorization token using
+ * JWT, which should be used for authentication check. All calls to api should
+ * come from web app, thereby CORS handling should be provided.
+ * 
+ * @author ubuntu
+ *
  */
+
+@RequestMapping(value = "/api/v1/auth", produces = MediaType.APPLICATION_JSON_VALUE)
+@CommonsLog
+@RestController
 public class UserAuthenticationController {
+	// secret key configuration parameter
+	private static final String JWT_KEY = "jwt.key";
 
-    /*
-	 * Autowiring should be implemented for the UserAuthenticationService. (Use Constructor-based
-	 * autowiring) Please note that we should not create an object using the new
-	 * keyword
-	 */
+	// JWT token time to live before expire
+	private static final long TOKEN_TTL = 3600000L;
 
-    public UserAuthenticationController(UserAuthenticationService authicationService) {
+	@Autowired
+	private Environment env;
+
+	private final UserAuthenticationService authenticationService;
+
+	@Autowired
+	public UserAuthenticationController(UserAuthenticationService authenticationService) {
+		this.authenticationService = authenticationService;
 	}
 
-/*
-	 * Define a handler method which will create a specific user by reading the
-	 * Serialized object from request body and save the user details in the
-	 * database. This handler method should return any one of the status messages
-	 * basis on different situations:
-	 * 1. 201(CREATED) - If the user created successfully. 
-	 * 2. 409(CONFLICT) - If the userId conflicts with any existing user
+	/**
+	 * This api is responsible for user registration using
+	 * {@code UserAuthenticationService}. There should not be check on authorization
+	 * token. It should receive {@code User} data and store it in DB.
 	 * 
-	 * This handler method should map to the URL "/api/v1/auth/register" using HTTP POST method
+	 * @param user
+	 * @return
+	 * @throws UserAlreadyExistsException
 	 */
+	@PostMapping("/register")
+	public User registerUser(@RequestBody User user) throws UserAlreadyExistsException {
+		try {
+			log.info("register user...");
+			this.authenticationService.saveUser(user);
+		} catch (UserAlreadyExistsException e) {
+			final String exMsg = e.getClass().getName() + "::" + e.getMessage();
+			log.info(exMsg);
+			throw new UserAlreadyExistsException(e.getMessage());
+		}
+		return user;
+	}
 
-
-
-
-	/* Define a handler method which will authenticate a user by reading the Serialized user
-	 * object from request body containing the username and password. The username and password should be validated 
-	 * before proceeding ahead with JWT token generation. The user credentials will be validated against the database entries. 
-	 * The error should be return if validation is not successful. If credentials are validated successfully, then JWT
-	 * token will be generated. The token should be returned back to the caller along with the API response.
-	 * This handler method should return any one of the status messages basis on different
-	 * situations:
-	 * 1. 200(OK) - If login is successful
-	 * 2. 401(UNAUTHORIZED) - If login is not successful
+	/**
+	 * This is responsible for user login check based on user id & password as
+	 * received. If user data is valid, then authentication token should be
+	 * generated using JWT and is sent back as response.
 	 * 
-	 * This handler method should map to the URL "/api/v1/auth/login" using HTTP POST method
-	*/
+	 * @param user
+	 * @return
+	 * @throws UserNotFoundException
+	 */
+	@PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
+	public BearerToken userLogin(@RequestBody LoginModel userLogin) throws UserNotFoundException {
+		log.info("user login..." + userLogin.toString());
+		try {
+			this.authenticationService.findByUserIdAndPassword(userLogin.getUserId(), userLogin.getUserPassword());
+			return BearerToken.builder().token(createToken(userLogin.getUserId())).authentication(Boolean.TRUE).build();
+		} catch (UserNotFoundException e) {
+			log.info(e.getClass().getName() + "::" + e.getMessage());
+			throw new UserNotFoundException(e.getMessage());
+		}
+	}
 
+	/**
+	 * This method is responsible to generate authorization token using JWT.
+	 * 
+	 * @param username
+	 * @param password
+	 * @return
+	 * @throws Exception
+	 */
+	public String createToken(String username) {
+		// create token based on username as subjects
+		Claims claims = Jwts.claims().setSubject(username);
+		claims.put("username", username);
+		claims.setExpiration(new Date(System.currentTimeMillis() + TOKEN_TTL));
+		return Jwts.builder().setClaims(claims).signWith(SignatureAlgorithm.HS256, env.getProperty(JWT_KEY)).compact();
 
-
-
-
-
-// Generate JWT token
-	public String getToken(String username, String password) throws Exception {
-			
-        return null;
-        
-        
-}
-
+	}
 
 }
