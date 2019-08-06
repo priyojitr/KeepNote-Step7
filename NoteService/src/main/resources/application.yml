@@ -5,7 +5,8 @@ spring:
       password: root123
       database: userDb
       port: 27017
-      host: localhost
+      host: mongo
+      authentication-database: userDb
   application:
     name: note-service
 server:

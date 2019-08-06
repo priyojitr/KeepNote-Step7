@@ -1,1 +1,60 @@
 # Dockerfile has been added in all micro-services, you need to dockerize all micro-services and add docker-compose.yml file
+version: '3'
+services:
+  api_user:
+    image: user-svc:pr
+    container_name: user-svc
+    ports:
+      - '8080:8080'
+    restart: always
+    build: ./UserService/
+    links:
+      - mongo_db
+
+  api_userauth:
+    image: userauth-svc:pr
+    container_name: userauth-svc
+    ports:
+      - '8089:8089'
+    restart: always
+    build: ./UserAuthentication-Service/
+    links:
+      - mongo_db
+
+  api_reminder:
+    image: rem-svc:pr
+    container_name: rem-svc
+    ports:
+      - '8081:8081'
+    restart: always
+    build: ./ReminderService/
+    links:
+      - mongo_db
+
+  api_category:
+    image: cat-svc:pr
+    container_name: cat-svc
+    ports:
+      - '8083:8083'
+    restart: always
+    build: ./CategoryService/
+    links:
+      - mongo_db
+
+  api_note:
+    image: note-svc:pr
+    container_name: note-svc
+    ports:
+      - '8082:8082'
+    restart: always
+    build: ./NoteService/
+    links:
+      - mongo_db
+
+  mongo_db:
+    image: mongo:latest
+    container_name: mongodock
+    ports: 
+      - '27017:27017'
+
+  

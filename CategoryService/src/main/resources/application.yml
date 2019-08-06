@@ -1,12 +1,12 @@
 spring:
   data:
     mongodb:
- #     authentication-database:
+      authentication-database: userDb
       username: app-root
       password: root123
       database: userDb
       port: 27017
-      host: localhost
+      host: mongo
   application:
     name: category-service
 server:
